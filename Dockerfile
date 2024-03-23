@@ -1,23 +1,30 @@
-# Use the official Golang image as a base
-FROM golang:latest
+# syntax=docker/dockerfile:1
 
-# Set the working directory inside the container
+# Build the application from source
+FROM golang:1.21.2 AS build-stage
+
 WORKDIR /app
 
-# Copy go.mod and go.sum files to the working directory
 COPY go.mod go.sum ./
-
-# Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
 RUN go mod download
 
-# Copy the rest of the application code to the working directory
-COPY . .
+COPY *.go ./
 
-# Build the Go application
-RUN CGO_ENABLED=1 GOOS=linux go build -o myapp .
+RUN CGO_ENABLED=1 GOOS=linux go build -o /docker-gs-ping
 
-# Expose port 3000 to the outside world
+# Run the tests in the container
+FROM build-stage AS run-test-stage
+RUN go test -v ./...
+
+# Deploy the application binary into a lean image
+FROM gcr.io/distroless/base-debian11 AS build-release-stage
+
+WORKDIR /
+
+COPY --from=build-stage /docker-gs-ping /docker-gs-ping
+
 EXPOSE 3000
 
-# Command to run the executable
-CMD ["./myapp"]
+USER nonroot:nonroot
+
+ENTRYPOINT ["/docker-gs-ping"]
