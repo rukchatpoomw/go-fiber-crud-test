@@ -1,9 +1,7 @@
 package main
 
-import "github.com/jinzhu/gorm"
-
 type Customer struct {
-	gorm.Model
+	ID   uint `gorm:"primary_key"`
 	Name string
 	Age  int
 }

@@ -2,23 +2,25 @@ package main
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/jinzhu/gorm"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
+	// testsssasss
 	app := fiber.New()
 
-	// SQLite database connection
-	db, err := gorm.Open("sqlite3", "./test.db")
+	// SQLite database connection with GORM (ORM library)
+	db, err := initializeDB()
 
 	if err != nil {
-		panic("failed to connect database" + err.Error())
+		println(err.Error())
 	}
-	defer db.Close()
 
 	// Migrate the schema
-	db.AutoMigrate(&Customer{})
+	autoMigrate(db)
+
+	// Create initial customer data
+	createInitialData(db)
 
 	// Register routes
 	registerRoutes(app, db)

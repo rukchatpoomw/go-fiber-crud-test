@@ -1,27 +1,21 @@
-# syntax=docker/dockerfile:1
-
+# Go Version
 FROM golang:1.21.2
 
-# Set destination for COPY
+# Environment variables which CompileDaemon requires to run
+ENV PROJECT_DIR=/app \
+    GO111MODULE=on \
+    CGO_ENABLED=1
+
+# Basic setup of the container
+RUN mkdir /app
+COPY .. /app
 WORKDIR /app
 
-# Download Go modules
-COPY go.mod go.sum ./
-RUN go mod download
+# Get CompileDaemon
+RUN go get github.com/githubnemo/CompileDaemon
+RUN go install github.com/githubnemo/CompileDaemon
 
-# Copy the source code. Note the slash at the end, as explained in
-# https://docs.docker.com/reference/dockerfile/#copy
-COPY *.go ./
-
-# Build
-RUN CGO_ENABLED=1 GOOS=linux go build -o /myapp
-
-# Optional:
-# To bind to a TCP port, runtime parameters must be supplied to the docker command.
-# But we can document in the Dockerfile what ports
-# the application is going to listen on by default.
-# https://docs.docker.com/reference/dockerfile/#expose
 EXPOSE 3000
-
-# Run
-CMD ["/myapp"]
+# The build flag sets how to build after a change has been detected in the source code
+# The command flag sets how to run the app after it has been built
+ENTRYPOINT CompileDaemon -build="go build -o api" -command="./api"
