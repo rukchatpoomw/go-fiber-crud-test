@@ -10,9 +10,10 @@ func main() {
 	app := fiber.New()
 
 	// SQLite database connection
-	db, err := gorm.Open("sqlite3", "test.db")
+	db, err := gorm.Open("sqlite3", "./test.db")
+
 	if err != nil {
-		panic("failed to connect database")
+		panic("failed to connect database" + err.Error())
 	}
 	defer db.Close()
 
