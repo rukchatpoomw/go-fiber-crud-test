@@ -14,28 +14,55 @@ func registerRoutes(app *fiber.App, db *gorm.DB) {
 
 func createCustomer(db *gorm.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		// Implement create customer logic
-		return nil
+		customer := new(Customer)
+		if err := c.BodyParser(customer); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Unable to parse request body"})
+		}
+
+		db.Create(&customer)
+		return c.Status(fiber.StatusCreated).JSON(customer)
 	}
 }
 
 func updateCustomer(db *gorm.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		// Implement update customer logic
-		return nil
+		customer := new(Customer)
+		if err := c.BodyParser(customer); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Unable to parse request body"})
+		}
+
+		id := c.Params("id")
+		var existingCustomer Customer
+		if err := db.First(&existingCustomer, id).Error; err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Customer not found"})
+		}
+
+		db.Model(&existingCustomer).Updates(customer)
+		return c.Status(fiber.StatusOK).JSON(existingCustomer)
 	}
 }
 
 func deleteCustomer(db *gorm.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		// Implement delete customer logic
-		return nil
+		id := c.Params("id")
+		var customer Customer
+		if err := db.First(&customer, id).Error; err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Customer not found"})
+		}
+
+		db.Delete(&customer)
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Customer deleted successfully"})
 	}
 }
 
 func getCustomer(db *gorm.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		// Implement get customer logic
-		return nil
+		id := c.Params("id")
+		var customer Customer
+		if err := db.First(&customer, id).Error; err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Customer not found"})
+		}
+
+		return c.Status(fiber.StatusOK).JSON(customer)
 	}
 }
